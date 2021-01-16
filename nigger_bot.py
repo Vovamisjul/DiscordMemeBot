@@ -13,6 +13,7 @@ import betterttv_emotes
 import phrases
 import race_buller
 import story_teller
+import weird_generator
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,9 @@ class NiggerBot(discord.Client):
 
         await asyncio.gather(bad_words.add_reaction_if_possible(message),
                              self.check_for_betterttv(message),
-                             self.try_to_voice_message(message))
+                             self.try_to_voice_message(message),
+                             self.try_to_get_fact(message),
+                             )
 
         if message.tts:
             await message.channel.send(f"<@{message.author.id}> {random.choice(self.talkativeness_phrases)}")
@@ -68,7 +71,7 @@ class NiggerBot(discord.Client):
             elif word != "":
                 contains_not_betterttv = True
 
-        if not contains_not_betterttv:
+        if not contains_not_betterttv and len(message.content) > 0:
             await message.delete()
 
     async def try_to_voice_message(self, message):
@@ -92,3 +95,14 @@ class NiggerBot(discord.Client):
                 await vc.disconnect()
             except ValueError as e:
                 logger.error(e)
+
+    async def try_to_get_fact(self, message):
+        if message.content.startswith("сгенерируй"):
+            words = message.content.split(" ")
+            if len(words) < 2:
+                return
+            if len(words) == 2:
+                words.append("")
+            result = await weird_generator.generate(words[1], words[2])
+            if result:
+                await message.channel.send(result)
